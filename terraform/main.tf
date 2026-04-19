@@ -62,9 +62,9 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
   tags = local.common_tags
 }
 
-# IAM role representing a service with read access to S3 buckets
-resource "aws_iam_role" "s3_reader" {
-  name = "${var.project_name}-${var.environment}-s3-reader"
+# IAM role representing a Lambda function with read access to the logs bucket
+resource "aws_iam_role" "log_processor" {
+  name = "${var.project_name}-${var.environment}-log-processor"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -72,7 +72,7 @@ resource "aws_iam_role" "s3_reader" {
       {
         Effect = "Allow"
         Principal = {
-          Service = "ec2.amazonaws.com"
+          Service = "lambda.amazonaws.com"
         }
         Action = "sts:AssumeRole"
       }
@@ -85,7 +85,7 @@ resource "aws_iam_role" "s3_reader" {
 # Permission policy granting S3 read access to the role
 resource "aws_iam_role_policy" "s3_read" {
   name = "${var.project_name}-${var.environment}-s3-read"
-  role = aws_iam_role.s3_reader.id
+  role = aws_iam_role.log_processor.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -97,8 +97,8 @@ resource "aws_iam_role_policy" "s3_read" {
           "s3:ListBucket"
         ]
         Resource = [
-          module.s3_state.bucket_arn,
-          "${module.s3_state.bucket_arn}/*"
+          module.s3_logs.bucket_arn,
+          "${module.s3_logs.bucket_arn}/*"
         ]
       }
     ]

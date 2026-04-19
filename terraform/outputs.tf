@@ -25,5 +25,5 @@ output "dynamodb_table_name" {
 
 output "iam_role_arn" {
   description = "The ARN of the IAM role for S3 read access"
-  value       = aws_iam_role.s3_reader.arn
+  value       = aws_iam_role.log_processor.arn
 }
